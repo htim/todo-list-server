@@ -7,6 +7,8 @@ import (
 	"github.com/alioygur/gores"
 	"github.com/pressly/chi"
 	"strconv"
+	"encoding/json"
+	"model"
 )
 
 type CategoryResource struct {
@@ -25,6 +27,7 @@ func (c *CategoryResource) Routes() *chi.Mux {
 	r := chi.NewRouter()
 	r.Get("/", c.GetAllCategories)
 	r.Get("/:id", c.GetCategoryById)
+	r.Post("/", c.CreateCategory)
 	return r
 }
 
@@ -37,7 +40,6 @@ func (c *CategoryResource) GetAllCategories(w http.ResponseWriter, r *http.Reque
 		return
 	}
 	gores.JSON(w, http.StatusOK, categories)
-	return
 }
 
 func (c *CategoryResource) GetCategoryById(w http.ResponseWriter, r *http.Request) {
@@ -54,4 +56,22 @@ func (c *CategoryResource) GetCategoryById(w http.ResponseWriter, r *http.Reques
 		return
 	}
 	gores.JSON(w, http.StatusOK, category)
+}
+
+func (c *CategoryResource) CreateCategory(w http.ResponseWriter, r *http.Request) {
+	decoder := json.NewDecoder(r.Body)
+	var cat model.Category
+	err := decoder.Decode(&cat)
+	if err != nil {
+		log.Println(err)
+		gores.JSON(w, http.StatusBadRequest, map[string]string{"error":"Invalid category payload"})
+		return
+	}
+	id, err := c.cr.CreateCategory(cat)
+	if err != nil {
+		log.Println(err)
+		gores.JSON(w, http.StatusInternalServerError, map[string]string{"error":"Internal error"})
+		return
+	}
+	gores.JSON(w, http.StatusOK, id)
 }
