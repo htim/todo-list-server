@@ -19,8 +19,15 @@ func NewCategoryRepository(db *sqlx.DB) *CategoryRepository {
 }
 
 func (cdm *CategoryRepository) FindAllCategories() (*[]model.Category, error) {
+	query :=
+		`SELECT
+			id as ID,
+			name as Name,
+			parent_id as ParentId
+		FROM
+			category`
 	categories := []model.Category{}
-	err := cdm.db.Select(&categories, "SELECT * FROM category")
+	err := cdm.db.Select(&categories, query)
 	if err != nil {
 		return nil, err
 	} else {
@@ -29,12 +36,20 @@ func (cdm *CategoryRepository) FindAllCategories() (*[]model.Category, error) {
 }
 
 func (cdm *CategoryRepository) FindCategoryById(id int) (*model.Category, error) {
+	query :=
+		`SELECT
+			id as ID,
+			name as Name,
+			parent_id as ParentId
+		FROM
+			category
+		WHERE
+			id=$1`
 	categories := []model.Category{}
-	err := cdm.db.Select(&categories, "SELECT * FROM category WHERE id=$1", id)
+	err := cdm.db.Select(&categories, query, id)
 	if err != nil {
 		return nil, err
 	} else {
 		return &categories[0], nil
 	}
 }
-
