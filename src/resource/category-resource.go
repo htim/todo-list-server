@@ -29,6 +29,7 @@ func (c *CategoryResource) Routes() *chi.Mux {
 	r.Get("/:id", c.GetCategoryById)
 	r.Post("/", c.CreateCategory)
 	r.Put("/:id", c.UpdateCategory)
+	r.Delete("/:id", c.DeleteCategory)
 	return r
 }
 
@@ -93,6 +94,22 @@ func (c *CategoryResource) UpdateCategory(w http.ResponseWriter, r *http.Request
 	}
 	cat.ID = id
 	err = c.cr.UpdateCategory(cat)
+	if err != nil {
+		log.Println(err)
+		gores.JSON(w, http.StatusInternalServerError, map[string]string{"error": "Internal error"})
+		return
+	}
+	gores.JSON(w, http.StatusOK, "")
+}
+
+func (c *CategoryResource) DeleteCategory(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.Atoi(chi.URLParam(r, "id"))
+	if err != nil {
+		log.Println(err)
+		gores.JSON(w, http.StatusBadRequest, map[string]string{"error": "Invalid ID param"})
+		return
+	}
+	err = c.cr.DeleteCategory(id)
 	if err != nil {
 		log.Println(err)
 		gores.JSON(w, http.StatusInternalServerError, map[string]string{"error": "Internal error"})

@@ -11,6 +11,7 @@ type ICategoryRepository interface {
 	FindCategoryById(id int) (*model.Category, error)
 	CreateCategory(category model.Category) (int, error)
 	UpdateCategory(category model.Category) error
+	DeleteCategory(id int) error
 }
 
 type CategoryRepository struct {
@@ -95,6 +96,26 @@ func (cr *CategoryRepository) UpdateCategory(category model.Category) error {
 		return err
 	}
 	_, err = tx.Exec(query, category.Name, category.ParentId, category.ID)
+	if err != nil {
+		multierror.Append(err, tx.Rollback())
+		return err
+	}
+	tx.Commit()
+	return nil
+}
+
+func (cr *CategoryRepository) DeleteCategory(id int) error {
+	query :=
+		`DELETE
+		FROM
+			category
+		WHERE
+			id=$1`
+	tx, err := cr.db.Beginx()
+	if err != nil {
+		return err
+	}
+	_, err = tx.Exec(query, id)
 	if err != nil {
 		multierror.Append(err, tx.Rollback())
 		return err
