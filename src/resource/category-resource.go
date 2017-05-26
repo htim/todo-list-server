@@ -28,31 +28,31 @@ func (c *CategoryResource) Routes() *chi.Mux {
 	r.Get("/", c.GetAllCategories)
 	r.Get("/:id", c.GetCategoryById)
 	r.Post("/", c.CreateCategory)
+	r.Put("/:id", c.UpdateCategory)
 	return r
 }
-
 
 func (c *CategoryResource) GetAllCategories(w http.ResponseWriter, r *http.Request) {
 	categories, err := c.cr.FindAllCategories()
 	if err != nil {
 		log.Print(err)
-		gores.JSON(w, http.StatusInternalServerError, map[string]string{"error":"Internal Error"})
+		gores.JSON(w, http.StatusInternalServerError, map[string]string{"error": "Internal Error"})
 		return
 	}
 	gores.JSON(w, http.StatusOK, categories)
 }
 
 func (c *CategoryResource) GetCategoryById(w http.ResponseWriter, r *http.Request) {
-	id, err := strconv.Atoi(chi.URLParam(r,"id"))
+	id, err := strconv.Atoi(chi.URLParam(r, "id"))
 	if err != nil {
 		log.Println(err)
-		gores.JSON(w, http.StatusBadRequest, map[string]string{"error":"Invalid ID param"})
+		gores.JSON(w, http.StatusBadRequest, map[string]string{"error": "Invalid ID param"})
 		return
 	}
 	category, err := c.cr.FindCategoryById(id)
 	if err != nil {
 		log.Println(err)
-		gores.JSON(w, http.StatusInternalServerError, map[string]string{"error":"Internal error"})
+		gores.JSON(w, http.StatusInternalServerError, map[string]string{"error": "Internal error"})
 		return
 	}
 	gores.JSON(w, http.StatusOK, category)
@@ -64,14 +64,39 @@ func (c *CategoryResource) CreateCategory(w http.ResponseWriter, r *http.Request
 	err := decoder.Decode(&cat)
 	if err != nil {
 		log.Println(err)
-		gores.JSON(w, http.StatusBadRequest, map[string]string{"error":"Invalid category payload"})
+		gores.JSON(w, http.StatusBadRequest, map[string]string{"error": "Invalid category payload"})
 		return
 	}
 	id, err := c.cr.CreateCategory(cat)
 	if err != nil {
 		log.Println(err)
-		gores.JSON(w, http.StatusInternalServerError, map[string]string{"error":"Internal error"})
+		gores.JSON(w, http.StatusInternalServerError, map[string]string{"error": "Internal error"})
 		return
 	}
 	gores.JSON(w, http.StatusOK, id)
+}
+
+func (c *CategoryResource) UpdateCategory(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.Atoi(chi.URLParam(r, "id"))
+	if err != nil {
+		log.Println(err)
+		gores.JSON(w, http.StatusBadRequest, map[string]string{"error": "Invalid ID param"})
+		return
+	}
+	decoder := json.NewDecoder(r.Body)
+	var cat model.Category
+	err = decoder.Decode(&cat)
+	if err != nil {
+		log.Println(err)
+		gores.JSON(w, http.StatusBadRequest, map[string]string{"error": "Invalid category payload"})
+		return
+	}
+	cat.ID = id
+	err = c.cr.UpdateCategory(cat)
+	if err != nil {
+		log.Println(err)
+		gores.JSON(w, http.StatusInternalServerError, map[string]string{"error": "Internal error"})
+		return
+	}
+	gores.JSON(w, http.StatusOK, "")
 }

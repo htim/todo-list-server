@@ -10,6 +10,7 @@ type ICategoryRepository interface {
 	FindAllCategories() (*[]model.Category, error)
 	FindCategoryById(id int) (*model.Category, error)
 	CreateCategory(category model.Category) (int, error)
+	UpdateCategory(category model.Category) error
 }
 
 type CategoryRepository struct {
@@ -78,4 +79,26 @@ func (cr *CategoryRepository) CreateCategory(category model.Category) (int, erro
 		return -1, err
 	}
 	return int(id), err
+}
+
+func (cr *CategoryRepository) UpdateCategory(category model.Category) error {
+	query :=
+		`UPDATE
+			category
+		SET
+			name=$1,
+			parent_id=$2
+		WHERE
+			id=$3`
+	tx, err := cr.db.Beginx()
+	if err != nil {
+		return err
+	}
+	_, err = tx.Exec(query, category.Name, category.ParentId, category.ID)
+	if err != nil {
+		multierror.Append(err, tx.Rollback())
+		return err
+	}
+	tx.Commit()
+	return nil
 }
