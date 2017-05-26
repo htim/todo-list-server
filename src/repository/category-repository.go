@@ -57,6 +57,7 @@ func (cr *CategoryRepository) FindCategoryById(id int) (*model.Category, error) 
 }
 
 func (cr *CategoryRepository) CreateCategory(category model.Category) (int, error) {
+	var id int
 	query :=
 		`INSERT INTO
 			category (name, parent_id)
@@ -67,12 +68,7 @@ func (cr *CategoryRepository) CreateCategory(category model.Category) (int, erro
 	if err != nil {
 		return -1, err
 	}
-	res, err := tx.Exec(query, category.Name, category.ParentId)
-	if err != nil {
-		multierror.Append(err, tx.Rollback())
-		return -1, err
-	}
-	id, err := res.LastInsertId()
+	err = tx.QueryRow(query, category.Name, category.ParentId).Scan(&id)
 	if err != nil {
 		multierror.Append(err, tx.Rollback())
 		return -1, err
