@@ -53,6 +53,8 @@ func (cr *CategoryRepository) FindCategoryById(id int) (*model.Category, error) 
 	err := cr.db.Select(&categories, query, id)
 	if err != nil {
 		return nil, err
+	} else if len(categories) == 0 {
+		return &model.Category{}, nil
 	} else {
 		return &categories[0], nil
 	}
